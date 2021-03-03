@@ -3,6 +3,7 @@ import bs4
 from typing import Optional, Tuple, Iterator, Dict, List, Union
 from pathlib import Path
 from collections import defaultdict
+from copy import copy
 import re
 import numpy as np
 
@@ -160,7 +161,7 @@ def get_subfields_data(page: Page, subfields: dict) -> Dict[str, Union[str, floa
                         dataset[subfield_name][row_id] = parse_subfield(subfield, subfield_type)
             else:
                 dataset[list(subfields)[0]][row_id] = parse_subfield(subfield, subfield_type)
-    #print(dataset)
+    print(dataset)
     return dataset
         
 def parse_subfield(subfield, subfield_type: str):
@@ -170,11 +171,12 @@ def parse_subfield(subfield, subfield_type: str):
     elif subfield_type == 'numeric':
         return parse_numeric_subfield(subfield)
         
-
 def parse_text_subfield(subfield):
     try:
-        
-        text = subfield.find(class_='text').span.text
+        subfield_copy = copy(subfield)
+        for content in subfield_copy.find_all('span'):
+            content.extract()
+        text = subfield_copy.text
     except AttributeError:
         text = ''.join(subfield.findAll(text=True))
     # Remove any excess whitespace
@@ -223,10 +225,10 @@ def str_to_float(text: str) -> float:
 
 dog = get_pages_from_index('factbook-2020\\docs\\notesanddefs.html')
 
-target = dog[25]
+target = dog[14]
 #print(target)
 cat = scrape_page(*target)
-#print(cat.keys())
+print(cat.keys())
 print(len(dog))
 print(f'From {target}')
 with open('factbook-2020\\docs\\notesanddefs.html', encoding='utf8') as file:
