@@ -73,10 +73,11 @@ def discover_subfields(page_name: str, page: Page, threshold: int = 50) -> Dict[
         return numeric_subfield_dict
     else:
         return text_subfield_dict
-       
+
 
 def discover_numeric_subfields(field, numeric_field_names: Dict[str, int]):
     """Update numeeric_field_names dict with count of each numeric field."""
+    
     for numeric_field in field.select('div.numeric'):
         field_name = numeric_field.find('span', {'class': 'subfield-name'})
         if field_name is None:
@@ -211,7 +212,7 @@ def str_to_float(text: str) -> float:
     try:
         number = float(new_text)
     except ValueError as e:
-        if text.lower() in ['na', 'nan']:
+        if text.lower() in ['na', 'nan'] or 'na' in text.lower()[:2]:
             value = np.nan
         else:
             value = 0
@@ -225,8 +226,8 @@ def str_to_float(text: str) -> float:
 
 dog = get_pages_from_index('factbook-2020\\docs\\notesanddefs.html')
 
-target = dog[14]
-#print(target)
+target = dog[41]
+print(target)
 cat = scrape_page(*target)
 print(cat.keys())
 print(len(dog))
@@ -235,25 +236,27 @@ with open('factbook-2020\\docs\\notesanddefs.html', encoding='utf8') as file:
     page = BeautifulSoup(file, 'html.parser')
 
 
-with open('factbook-2020\\fields\\301.html') as file:
+with open('factbook-2020\\fields\\238.html') as file:
     page2 = BeautifulSoup(file, 'html.parser')
     
-#a = discover_subfields('Capital', page2, 50)
-##print(a)
+#a = discover_subfields('Current Balance', page2, 50)
+#print(a)
 
 
 """
-TODO:
-    14 Capital - multiple text subfields*****
+Problems to fix:
     17 Citizenship - Convert yes/no?
-    18 Civil aircraft prefix - Remove (2016)
   X 21 Communcations - Skip this
-   #25 Credit ratings - multiple textsubfields, remove (DATE)
-   #30 Account balance - fix float conversion, billion million etc.
-   #33 Debt - "                                               "
-  ##37 Dependant areas note ???????????????
-  ##41 Subfields is empty
+    29 Crude oil - production fix billion/million etc
+  ##30 Account balance - two fields, no names, ugh
+  ##33 Debt - ^^same problem
+  X 37 Dependant areas note - Skip this
+  ##41 Drinkikng water source: complicated set of sub-sub categories
   
-    
+  
+Last thing I was doing:
+    Going through numbers to check for errors.
 """
+
+
 
