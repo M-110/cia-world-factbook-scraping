@@ -12,8 +12,6 @@ Page = bs4.BeautifulSoup
 
 with open('factbook-2020\\fields\\279.html') as file:
     page = BeautifulSoup(file, 'html.parser')
-with open('factbook-2020\\fields\\199.html') as file:
-    page2 = BeautifulSoup(file, 'html.parser')
     
     
 def clean_name(string_: str) -> str:
@@ -162,7 +160,7 @@ def get_subfields_data(page: Page, subfields: dict) -> Dict[str, Union[str, floa
                         dataset[subfield_name][row_id] = parse_subfield(subfield, subfield_type)
             else:
                 dataset[list(subfields)[0]][row_id] = parse_subfield(subfield, subfield_type)
-    print(dataset)
+    #print(dataset)
     return dataset
         
 def parse_subfield(subfield, subfield_type: str):
@@ -175,6 +173,7 @@ def parse_subfield(subfield, subfield_type: str):
 
 def parse_text_subfield(subfield):
     try:
+        
         text = subfield.find(class_='text').span.text
     except AttributeError:
         text = ''.join(subfield.findAll(text=True))
@@ -224,33 +223,35 @@ def str_to_float(text: str) -> float:
 
 dog = get_pages_from_index('factbook-2020\\docs\\notesanddefs.html')
 
-#target = dog[11]
-#cat = scrape_page(*target)
+target = dog[25]
+#print(target)
+cat = scrape_page(*target)
 #print(cat.keys())
-#print(len(dog))
-#print(f'From {target}')
+print(len(dog))
+print(f'From {target}')
 with open('factbook-2020\\docs\\notesanddefs.html', encoding='utf8') as file:
     page = BeautifulSoup(file, 'html.parser')
 
-a = discover_subfields('Broadcast', page2, 50)
-print(a)
+
+with open('factbook-2020\\fields\\301.html') as file:
+    page2 = BeautifulSoup(file, 'html.parser')
+    
+#a = discover_subfields('Capital', page2, 50)
+##print(a)
 
 
 """
 TODO:
-   #14 Capital - multiple text subfields*****
+    14 Capital - multiple text subfields*****
     17 Citizenship - Convert yes/no?
     18 Civil aircraft prefix - Remove (2016)
-  ##21 Communcations - note ???????????????? ************
-   #22 Constrituion - multiple textsbufields *****
-   #24 Country name - multiple textsubfields *****
+  X 21 Communcations - Skip this
    #25 Credit ratings - multiple textsubfields, remove (DATE)
    #30 Account balance - fix float conversion, billion million etc.
    #33 Debt - "                                               "
   ##37 Dependant areas note ???????????????
-   
-   
-
+  ##41 Subfields is empty
+  
     
 """
 
