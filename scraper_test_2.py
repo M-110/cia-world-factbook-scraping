@@ -8,16 +8,59 @@ from bs4 import BeautifulSoup
 import bs4
 import numpy as np
 
+# For type hinting
 Page = bs4.BeautifulSoup
-
-with open('factbook-2020\\fields\\279.html') as file:
-    page = BeautifulSoup(file, 'html.parser')
+Tag = bs4.Tag
 
 
-def clean_name(string_: str) -> str:
-    """"Returns string without extra white space and ':'."""
-    return string_.strip().replace(':', '')
+def get_all_pages_from_index(index_page: str) -> List[Tuple[str, str]]:
+    """Get a list of links from the index page.
 
+    Args:
+        index_page: location of the 'notesanddefs.html' file.
+
+    Returns:
+        List of tuples containing the relative link and the name of the page.
+        For example:
+            [('factbook-2020/fields/288.html', 'Land use'),
+             ('factbook-2020/fields/402.html', 'Languages')]
+    """
+    with open(index_page, encoding='utf8') as f:
+        index = BeautifulSoup(f, 'html.parser')
+
+    pages = []
+    for category in index.select('div.category'):
+        if not (links := category.select('a')):
+            continue
+        link = links[0]['href'].replace('..', 'factbook-2020')
+        name = category.text.strip()
+        pages.append((name, link))
+    return pages
+
+
+def scrape_page(name: str, link: str):
+    """Scrape a specific category's page and return its data.
+
+    Args:
+        name: the name of the category.
+        link: the relative link to the category's html file.
+    """
+    # Get the category's html content.
+    with open(Path(link), encoding='utf8') as f:
+        page = BeautifulSoup(f, 'html.parser')
+
+    # Get the subfields (columns) from the page and return their name and whether
+    # each is a numeric type or text type.
+    subfields = discover_all_subfields(name, page)
+
+    if not subfields:
+        raise ValueError('Subfields is empty')
+    # TODO: Specific type.
+    # Parse the page for the given subfields and return a
+    return get_subfields_data(page, subfields)
+
+
+# region scanning subfields for names/types
 
 def discover_all_subfields(page_name: str, page: Page, threshold: int = 50) -> Dict[str, str]:
     """Searches a page and returns the name and type of subfields as a dict.
@@ -29,9 +72,10 @@ def discover_all_subfields(page_name: str, page: Page, threshold: int = 50) -> D
 
     Args:
         page_name: The category title for the page.
-        page: BeautifulSoup instance containing html of a category's page.
-        threshold: minimum number of countries that must have this subfield
-                   to count it.
+        page: BeautifulSoup instance containing html of the category's page.
+        threshold: Minimum number of countries that must have a subfield for it
+            to be included. Subfields that don't reach this threshold will
+            be ignored.
       
     Returns:
         Dict[subfield name, subfield type]
@@ -44,23 +88,31 @@ def discover_all_subfields(page_name: str, page: Page, threshold: int = 50) -> D
     numeric_field_names: Dict[str, int] = {}
     text_field_names: Dict[str, int] = {}
 
+    # Iterate through each row and update the numeric_field_names and
+    # text_field_names dictionaries. This is to track the count of
+    # each subfield.
     for row in country_rows:
-        # for field in row.select('div', {'id': 'field-area'}):
         for field in row.select('div'):
-            # Scan Numeric
             discover_numeric_subfields(field, numeric_field_names)
             discover_text_subfields(field, text_field_names)
 
+    # If it contains both types of fields, raise an exception because
+    # handling this is not yet implemented.
     if numeric_field_names and text_field_names:
         raise ValueError(f"Numeric and text fields included in {page_name}.")
 
     numeric_subfield_dict: Dict[str, str] = create_subfield_dict(page_name,
                                                                  numeric_field_names,
-                                                                 'numeric')
+                                                                 'numeric',
+                                                                 threshold)
 
     text_subfield_dict: Dict[str, str] = create_subfield_dict(page_name,
                                                               text_field_names,
-                                                              'text')
+                                                              'text',
+                                                              threshold)
+
+    # If there is only one field, just use the page's category name as the
+    # subfield name.
     if len(numeric_subfield_dict) == 1:
         return {page_name: 'numeric'}
     elif len(text_subfield_dict) == 1:
@@ -72,9 +124,16 @@ def discover_all_subfields(page_name: str, page: Page, threshold: int = 50) -> D
         return text_subfield_dict
 
 
-def discover_numeric_subfields(field, numeric_field_names: Dict[str, int]):
-    """Update numeric_field_names dict with count of each numeric field."""
-
+def discover_numeric_subfields(field: Tag, numeric_field_names: Dict[str, int]):
+    """Update numeric_field_names dict with count of each numeric field.
+    
+    Args:
+        field: BeautifulSoup tag object representing an individual field in a
+            country's row.
+                
+        numeric_field_names: Dictionary containing the current count of values
+            for each numeric subfield name.
+    """
     for numeric_field in field.select('div.numeric'):
         field_name = numeric_field.find('span', {'class': 'subfield-name'})
         if field_name is None:
@@ -84,8 +143,16 @@ def discover_numeric_subfields(field, numeric_field_names: Dict[str, int]):
         numeric_field_names[name] = numeric_field_names.get(name, 0) + 1
 
 
-def discover_text_subfields(field, text_field_names: Dict[str, int]):
-    """Update text_field_names dict with count of each text field."""
+def discover_text_subfields(field: Tag, text_field_names: Dict[str, int]):
+    """Update text_field_names dict with count of each text field.
+    
+    Args:
+        field: BeautifulSoup tag object representing an individual field in a
+            country's row.
+                
+        text_field_names: Dictionary containing the current count of values
+            for each text subfield name.
+    """
     for text_field in field.select('div.text'):
         field_name = text_field.find('span', class_='subfield-name')
         if field_name is None:
@@ -96,57 +163,41 @@ def discover_text_subfields(field, text_field_names: Dict[str, int]):
 
 
 def create_subfield_dict(page_name: str, field_names_dict: Dict[str, int],
-                         field_type: str) -> Dict[str, str]:
-    """Returns dict containing subfield name and type for each subfield
-    with more entries than the threshold."""
+                         field_type: str, threshold: int) -> Dict[str, str]:
+    """Returns a dictionary containing subfield name and type for each subfield
+    with more entries than the threshold.
+    
+    Args:
+        page_name: Category name of the page.
+        field_names_dict: Dictionary containing the field names and the number of
+            references.
+        field_type: Type of values in the field, 'numeric' or 'text'.
+        threshold: Minimum threshold of reference counts for a field to be
+            included in the subfield dict that is returned.
+    Returns:
+        Dict[str, str] in the form:
+            {'Category Name (Subfield Name)': 'Subfield Type']
+    """
     return {f'{page_name} ({clean_name(field)})': field_type
             for field, count in field_names_dict.items()
-            if count > 50}
+            if count > threshold}
 
 
-def get_pages_from_index(index_page: str) -> List[Tuple[str, str]]:
-    """Get a list of links from the index page.
+# endregion
+
+# region parsing subfields for data
+
+def get_subfields_data(page: Page, subfields: Dict[str, str]
+                       ) -> Dict[str, Dict[str, Union[str, float]]]:
+    """Parse the page and return all the data from the given subfields.
     
     Args:
-        index_page: location of the 'notesanddefs.html' file.
+        page: BeautifulSoup instance containing html of the category's page.
+        subfields: Dictionary of subfield names and their corresponding type.
         
     Returns:
-        List of tuples containing the relative link and the name of the page.
-        For example:
-            [('../fields/288.html', 'Land use'),
-             ('../fields/402.html', 'Languages')]
-    """
-    pages = []
-    with open(index_page, encoding='utf8') as f:
-        index = BeautifulSoup(f, 'html.parser')
-
-    for category in index.select('div.category'):
-        links = category.select('a')
-        if not links:
-            continue
-        link = links[0]['href'].replace('..', 'factbook-2020')
-        name = category.text.strip()
-        pages.append((name, link))
-    return pages
-
-
-def scrape_page(name: str, link: str):
-    """Scrape a specific category's page and return its data.
-    
-    Args:
-        name: the name of the category.
-        link: the relative link to the category's html file.
-    """
-    with open(Path(link), encoding='utf8') as f:
-        page = BeautifulSoup(f, 'html.parser')
-    subfields = discover_all_subfields(name, page)
-    if not subfields:
-        raise ValueError('Subfields is empty')
-    return get_subfields_data(page, subfields)
-
-
-def get_subfields_data(page: Page, subfields: dict) -> Dict[str, Union[str, float]]:
-    """Get the data.
+        Dictionary containing the data on the page in the form:
+        {'Subfield Name': {'Country Name': 'Subfield Value'}}
     """
     subfield_type: str = list(subfields.values())[0]
     all_rows = page.findAll('tr')
@@ -161,19 +212,20 @@ def get_subfields_data(page: Page, subfields: dict) -> Dict[str, Union[str, floa
                         dataset[subfield_name][row_id] = parse_subfield(subfield, subfield_type)
             else:
                 dataset[list(subfields)[0]][row_id] = parse_subfield(subfield, subfield_type)
-    print(dataset)
     return dataset
 
 
-def parse_subfield(subfield, subfield_type: str):
-    """Returns the data using two parsers depending on subfield type."""
+def parse_subfield(subfield: Tag, subfield_type: str) -> Union[str, float]:
+    """Returns the field value as either a string or float depending on the
+    given subfield_type."""
     if subfield_type == 'text':
         return parse_text_subfield(subfield)
     elif subfield_type == 'numeric':
         return parse_numeric_subfield(subfield)
 
 
-def parse_text_subfield(subfield):
+def parse_text_subfield(subfield: Tag) -> str:
+    """Returns a string containing the value in the given row's subfield."""
     try:
         subfield_copy = copy(subfield)
         for content in subfield_copy.find_all('span'):
@@ -183,13 +235,12 @@ def parse_text_subfield(subfield):
         text = ''.join(subfield.findAll(text=True))
     # Remove any excess whitespace
     if not (output := re.sub(r'\s+', ' ', text).strip()):
-        print('****Could not return.')
-        print('**********', subfield)
-        raise ValueError('Could not find any text')
+        raise ValueError(f'Could not find any text in {subfield}')
     return output
 
 
-def parse_numeric_subfield(subfield):
+def parse_numeric_subfield(subfield: Tag) -> float:
+    """Returns a float containing the value in the given row's subfield."""
     try:
         # Some numbers are put in the notes instead for some reason.
         subfield_number = subfield.find(class_='subfield-number') or subfield.find(class_='subfield-note')
@@ -200,6 +251,10 @@ def parse_numeric_subfield(subfield):
         return np.nan
     return str_to_float(number)
 
+
+# endregion
+
+# region helper functions
 
 def str_to_float(text: str) -> float:
     """Strip text of non-numeric characters and return as a float.
@@ -227,20 +282,25 @@ def str_to_float(text: str) -> float:
     return number
 
 
+def clean_name(string_: str) -> str:
+    """"Returns string without extra white space and ':'."""
+    return string_.strip().replace(':', '')
+
+
+# endregion
+
 if __name__ == "__main__":
-    dog = get_pages_from_index('factbook-2020\\docs\\notesanddefs.html')
-
-    target = dog[41]
-    print(target)
+    all_pages = get_all_pages_from_index('factbook-2020\\docs\\notesanddefs.html')
+    target = all_pages[40]
     cat = scrape_page(*target)
-    print(cat.keys())
-    print(len(dog))
+    print(cat)
+    print(f'Subfields ({len(cat.keys())}): ', list(cat.keys()))
     print(f'From {target}')
-    with open('factbook-2020\\docs\\notesanddefs.html', encoding='utf8') as file:
-        page = BeautifulSoup(file, 'html.parser')
-
-    with open('factbook-2020\\fields\\238.html') as file:
-        page2 = BeautifulSoup(file, 'html.parser')
+    # with open('factbook-2020\\docs\\notesanddefs.html', encoding='utf8') as file:
+    #     page = BeautifulSoup(file, 'html.parser')
+    # 
+    # with open('factbook-2020\\fields\\238.html') as file:
+    #     page2 = BeautifulSoup(file, 'html.parser')
 
     # a = discover_subfields('Current Balance', page2, 50)
     # print(a)
