@@ -264,13 +264,18 @@ def str_to_float(text: str) -> float:
     text = text.replace(' ', '').replace(',', '')
     new_text = ''
     for char in text:
-        if not (char.isdigit() or char == '.' or char == '-'):
+        if not (char.isdigit() or char in ['.', '-', '<', '>']):
             break
         new_text += char
     try:
-        number = float(new_text)
+        if '<' in new_text:
+            number = float(new_text.replace('<', ''))
+        else:
+            number = float(new_text)
     except ValueError:
         if text.lower() in ['na', 'nan'] or 'na' in text.lower()[:2]:
+            value = np.nan
+        elif 'note' in text.lower():
             value = np.nan
         else:
             value = 0
@@ -291,10 +296,12 @@ def clean_name(string_: str) -> str:
 
 if __name__ == "__main__":
     all_pages = get_all_pages_from_index('factbook-2020\\docs\\notesanddefs.html')
-    target = all_pages[40]
-    cat = scrape_page(*target)
-    print(cat)
-    print(f'Subfields ({len(cat.keys())}): ', list(cat.keys()))
+    for i in range(175, 200):
+        target = all_pages[i]
+        print(f'From {target} ({i})')
+        cat = scrape_page(*target)
+        print(cat)
+        print(f'Subfields ({len(cat.keys())}): ', list(cat.keys()))
     print(f'From {target}')
     # with open('factbook-2020\\docs\\notesanddefs.html', encoding='utf8') as file:
     #     page = BeautifulSoup(file, 'html.parser')
@@ -315,6 +322,43 @@ Problems to fix:
   ##33 Debt - ^^same problem
   X 37 Dependant areas note - Skip this
   ##41 Drinking water source: complicated set of sub-sub categories
+  ##42 Afghanistan and Akotiri have multiple subfields instead of 1 like the others
+  ##55 Numeric and text fields included
+  ##59 Values given from multiple years, too many numerics ***Maybe raw data files can help with these
+  ##60 Poorly formatted inconsistency
+  ##61 Values given from multiple years, too many numerics
+    66 fix billion/million etc
+  ##67 Values given from multiple years, too many numerics
+  ##70 Values given from multiple years, too many numerics
+  ##71 Values given from multiple years, too many numerics
+  X 74 Only two values, skip
+  ##76 Values given from multiple years, too many numerics
+  ##84 Values given from multiple years, too many numerics
+  ##91 Values given from multiple years, too many numerics
+  ##100 Numeric and text fields included
+  ##106 Numeric and text fields included (maybe skip first text field?)
+  X 111 Only three values, skip
+    112 Mix of numbers and string descriptions, maybe just make this a string page?
+  X 113 Only a few values, skip
+    116 Mix of numbers and string descriptions
+  ##122 Values given from multiple years, too many numerics
+  X 139 Only a few values, skip
+    143 Dhekelia population is a long description instead of a number
+  ##148 Values given from multiple years, too many numerics
+  ##156 Values given from multiple years, too many numerics
+    158 Complicated, subfield within subfield
+  ##169 Formatting weird. Text is outside of the subfield name span.
+  X 170 Only a few values, skip
+  ##171 Values given from multiple years, too many numerics
+    174 Mix of numbers and string descriptions
+    
+    
+    
+  
+  
+  Other issues:
+    Numeric values with <X are being replaced with X. Maybe this isn't accurate
+  
   
   
 Last thing I was doing:
