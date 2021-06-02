@@ -1,5 +1,6 @@
 from collections import defaultdict
 from copy import copy
+import os
 from pathlib import Path
 from typing import Optional, Tuple, Iterator, Dict, List, Union
 import re
@@ -38,13 +39,41 @@ def get_all_pages_from_index(index_page: str) -> List[Tuple[str, str]]:
     return pages
 
 
-def scrape_page(name: str, link: str):
+def scrape_page(name: str, link: str) -> Dict[str, Dict[str, Union[str, float]]]:
     """Scrape a specific category's page and return its data.
 
     Args:
         name: the name of the category.
         link: the relative link to the category's html file.
     """
+    if txt_file := has_txt_version(link):
+        return txt_parser(name, txt_file)
+    else:
+        return html_parser(name, link)
+
+
+def has_txt_version(file: str) -> Optional[str]:
+    """Returns file path if there exists a txt version of the file in the
+     directory, otherwise it returns None."""
+    *directory, file_name = file.split('/')
+    txt_file = 'rawdata_' + file_name.replace('html', 'txt')
+    if txt_file in list(os.listdir(os.path.join(*directory))):
+        return os.path.join(*directory, txt_file)
+
+
+def txt_parser(name: str, file: str) -> Dict[str, Dict[str, Union[str, float]]]:
+    """Parse a txt file and return the data."""
+    with open(file, encoding='utf8') as f:
+        next(f)
+        txt_contents = f.read()
+        txt_contents = re.sub('\s{2,}', '\t', txt_contents)
+        data = [column.split('\t')[1:3]
+                for column in txt_contents.split('\n') if column]
+    print(data)
+
+
+def html_parser(name: str, link: str) -> Dict[str, Dict[str, Union[str, float]]]:
+    """Parse an html file and return the data."""
     # Get the category's html content.
     with open(Path(link), encoding='utf8') as f:
         page = BeautifulSoup(f, 'html.parser')
@@ -296,7 +325,7 @@ def clean_name(string_: str) -> str:
 
 if __name__ == "__main__":
     all_pages = get_all_pages_from_index('factbook-2020\\docs\\notesanddefs.html')
-    for i in range(175, 200):
+    for i in [4]:
         target = all_pages[i]
         print(f'From {target} ({i})')
         cat = scrape_page(*target)
@@ -315,46 +344,29 @@ if __name__ == "__main__":
 # TODO LIST
 """
 Problems to fix:
-    17 Citizenship - Convert yes/no?
-  X 21 Communications - Skip this
-    29 Crude oil - production fix billion/million etc
-  ##30 Account balance - two fields, no names, ugh
-  ##33 Debt - ^^same problem
-  X 37 Dependant areas note - Skip this
-  ##41 Drinking water source: complicated set of sub-sub categories
-  ##42 Afghanistan and Akotiri have multiple subfields instead of 1 like the others
-  ##55 Numeric and text fields included
-  ##59 Values given from multiple years, too many numerics ***Maybe raw data files can help with these
-  ##60 Poorly formatted inconsistency
-  ##61 Values given from multiple years, too many numerics
-    66 fix billion/million etc
-  ##67 Values given from multiple years, too many numerics
-  ##70 Values given from multiple years, too many numerics
-  ##71 Values given from multiple years, too many numerics
-  X 74 Only two values, skip
-  ##76 Values given from multiple years, too many numerics
-  ##84 Values given from multiple years, too many numerics
-  ##91 Values given from multiple years, too many numerics
-  ##100 Numeric and text fields included
-  ##106 Numeric and text fields included (maybe skip first text field?)
-  X 111 Only three values, skip
-    112 Mix of numbers and string descriptions, maybe just make this a string page?
-  X 113 Only a few values, skip
-    116 Mix of numbers and string descriptions
-  ##122 Values given from multiple years, too many numerics
-  X 139 Only a few values, skip
-    143 Dhekelia population is a long description instead of a number
-  ##148 Values given from multiple years, too many numerics
-  ##156 Values given from multiple years, too many numerics
-    158 Complicated, subfield within subfield
-  ##169 Formatting weird. Text is outside of the subfield name span.
-  X 170 Only a few values, skip
-  ##171 Values given from multiple years, too many numerics
-    174 Mix of numbers and string descriptions
-    
-    
-    
-  
+    SKIP:
+        21, 37, 74, 111, 113, 139, 170
+        
+    Multiple year values given:
+        30, 33, 59, 61, 67, 70, 71, 76, 84, 91, 122, 148, 156, 171
+        
+    Formatting Complications:
+        41, sub-sub categories
+        42, inconsistent subfields (afghanistan and akotiri)
+        60, inconsistent
+        158, sub-subfield
+        169, text outside of span
+        
+    Mix of number and string descriptions:
+        55 (mean is always number), 100 (total is always number), 106 (definition is a string),
+         112, 116, 174
+        
+    One-off:
+        143, Dhekelia population is a long description rather than number
+        
+    Billion/million fix:
+        29, 66
+        
   
   Other issues:
     Numeric values with <X are being replaced with X. Maybe this isn't accurate
@@ -362,5 +374,6 @@ Problems to fix:
   
   
 Last thing I was doing:
-    Going through numbers to check for errors.
+    I need to implement a rawdata parser which will be used if a txt file exists
+    for the page.
 """
