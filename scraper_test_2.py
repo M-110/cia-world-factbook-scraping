@@ -13,289 +13,11 @@ import numpy as np
 Page = bs4.BeautifulSoup
 Tag = bs4.Tag
 
-COUNTRY_DICT = {'Afghanistan': 'AF',
-                'Akrotiri': 'AX',
-                'Albania': 'AL',
-                'Algeria': 'DZ',
-                'American Samoa': 'AS',
-                'Andorra': 'AD',
-                'Angola': 'AO',
-                'Anguilla': 'AI',
-                'Antarctica': 'AQ',
-                'Antigua and Barbuda': 'AG',
-                'Argentina': 'AR',
-                'Armenia': 'AM',
-                'Aruba': 'AW',
-                'Ashmore and Cartier Islands': 'AT',
-                'Australia': 'AU',
-                'Austria': 'AT',
-                'Azerbaijan': 'AZ',
-                'Bahamas, The': 'BS',
-                'Bahrain': 'BH',
-                'Bangladesh': 'BD',
-                'Barbados': 'BB',
-                'Belarus': 'BY',
-                'Belgium': 'BE',
-                'Belize': 'BZ',
-                'Benin': 'BJ',
-                'Bermuda': 'BM',
-                'Bhutan': 'BT',
-                'Bolivia': 'BO',
-                'Bolivia, Plurinational State of': 'BO',
-                'Bosnia and Herzegovina': 'BA',
-                'Botswana': 'BW',
-                'Bouvet Island': 'BV',
-                'Brazil': 'BR',
-                'British Indian Ocean Territory': 'IO',
-                'Brunei': 'BN',
-                'Brunei Darussalam': 'BN',
-                'Bulgaria': 'BG',
-                'Burkina Faso': 'BF',
-                'Burma': 'MM',
-                'Burundi': 'BI',
-                'Cambodia': 'KH',
-                'Cameroon': 'CM',
-                'Canada': 'CA',
-                'Cabo Verde': 'CV',
-                'Cayman Islands': 'KY',
-                'Central African Republic': 'CF',
-                'Chad': 'TD',
-                'Chile': 'CL',
-                'China': 'CN',
-                'Christmas Island': 'CX',
-                'Clipperton Island': 'IP',
-                'Cocos (Keeling) Islands': 'CC',
-                'Colombia': 'CO',
-                'Comoros': 'KM',
-                'Congo, Republic of the': 'CG',
-                'Congo, Democratic Republic of the': 'CD',
-                'Cook Islands': 'CK',
-                'Coral Sea Islands': 'CR',
-                'Costa Rica': 'CR',
-                'Croatia': 'HR',
-                'Cuba': 'CU',
-                'Curacao': 'UC',
-                'Cyprus': 'CY',
-                'Czechia': 'CZ',
-                "Cote d'Ivoire": 'CI',
-                'Denmark': 'DK',
-                'Dhekelia': 'DX',
-                'Djibouti': 'DJ',
-                'Dominica': 'DM',
-                'Dominican Republic': 'DO',
-                'Ecuador': 'EC',
-                'Egypt': 'EG',
-                'El Salvador': 'SV',
-                'Equatorial Guinea': 'GQ',
-                'Eritrea': 'ER',
-                'Estonia': 'EE',
-                'Ethiopia': 'ET',
-                'Falkland Islands (Islas Malvinas)': 'FK',
-                'Faroe Islands': 'FO',
-                'Fiji': 'FJ',
-                'Finland': 'FI',
-                'France': 'FR',
-                'French Guiana': 'GF',
-                'French Polynesia': 'PF',
-                'French Southern Territories': 'TF',
-                'French Southern and Antarctic Lands': 'FS',
-                'Gabon': 'GA',
-                'Gambia, The': 'GM',
-                'Gaza Strip': 'GZ',
-                'Georgia': 'GE',
-                'Germany': 'DE',
-                'Ghana': 'GH',
-                'Gibraltar': 'GI',
-                'Greece': 'GR',
-                'Greenland': 'GL',
-                'Grenada': 'GD',
-                'Guadeloupe': 'GP',
-                'Guam': 'GU',
-                'Guatemala': 'GT',
-                'Guernsey': 'GG',
-                'Guinea': 'GN',
-                'Guinea-Bissau': 'GW',
-                'Guyana': 'GY',
-                'Haiti': 'HT',
-                'Heard Island and McDonald Islands': 'HM',
-                'Holy See (Vatican City State)': 'VA',
-                'Honduras': 'HN',
-                'Hong Kong': 'HK',
-                'Hungary': 'HU',
-                'Iceland': 'IS',
-                'India': 'IN',
-                'Indonesia': 'ID',
-                'Iran': 'IR',
-                'Iraq': 'IQ',
-                'Ireland': 'IE',
-                'Isle of Man': 'IM',
-                'Israel': 'IL',
-                'Italy': 'IT',
-                'Ivory Coast': 'CI',
-                'Jamaica': 'JM',
-                'Jan Mayen': 'JN',
-                'Japan': 'JP',
-                'Jarvis Island': 'UM',
-                'Jersey': 'JE',
-                'Johnston Atoll': 'JQ',
-                'Jordan': 'JO',
-                'Kazakhstan': 'KZ',
-                'Kenya': 'KE',
-                'Kiribati': 'KI',
-                "Korea, North": 'KP',
-                'Korea, South': 'KR',
-                'Kosovo': 'KV',
-                'Kuwait': 'KW',
-                'Kyrgyzstan': 'KG',
-                "Laos": 'LA',
-                'Latvia': 'LV',
-                'Lebanon': 'LB',
-                'Lesotho': 'LS',
-                'Liberia': 'LR',
-                'Libya': 'LY',
-                'Libyan Arab Jamahiriya': 'LY',
-                'Liechtenstein': 'LI',
-                'Lithuania': 'LT',
-                'Luxembourg': 'LU',
-                'Macau': 'MO',
-                'Macedonia': 'MK',
-                'Madagascar': 'MG',
-                'Malawi': 'MW',
-                'Malaysia': 'MY',
-                'Maldives': 'MV',
-                'Mali': 'ML',
-                'Malta': 'MT',
-                'Marshall Islands': 'MH',
-                'Martinique': 'MQ',
-                'Mauritania': 'MR',
-                'Mauritius': 'MU',
-                'Mayotte': 'YT',
-                'Mexico': 'MX',
-                'Micronesia, Federated States of': 'FM',
-                'Midway Islands': 'MQ',
-                'Moldova': 'MD',
-                'Monaco': 'MC',
-                'Mongolia': 'MN',
-                'Montenegro': 'ME',
-                'Montserrat': 'MS',
-                'Morocco': 'MA',
-                'Mozambique': 'MZ',
-                'Myanmar': 'MM',
-                'Namibia': 'NA',
-                'Nauru': 'NR',
-                'Navassa Island': 'BQ',
-                'Nepal': 'NP',
-                'Netherlands': 'NL',
-                'Netherlands Antilles': 'AN',
-                'New Caledonia': 'NC',
-                'New Zealand': 'NZ',
-                'Nicaragua': 'NI',
-                'Niger': 'NE',
-                'Nigeria': 'NG',
-                'Niue': 'NU',
-                'Norfolk Island': 'NF',
-                'Northern Mariana Islands': 'MP',
-                'Norway': 'NO',
-                'Oman': 'OM',
-                'Pakistan': 'PK',
-                'Palau': 'PW',
-                'Palestinian Territory, Occupied': 'PS',
-                'Palmyra Atoll': 'LQ',
-                'Panama': 'PA',
-                'Papua New Guinea': 'PG',
-                'Paracel Islands': 'PF',
-                'Paraguay': 'PY',
-                'Peru': 'PE',
-                'Philippines': 'PH',
-                'Pitcairn': 'PN',
-                'Pitcairn Islands': 'PC',
-                'Poland': 'PL',
-                'Portugal': 'PT',
-                'Puerto Rico': 'PR',
-                'Qatar': 'QA',
-                'Romania': 'RO',
-                'Russia': 'RU',
-                'Russian Federation': 'RU',
-                'Rwanda': 'RW',
-                'Réunion': 'RE',
-                'Saint Barthelemy': 'TB',
-                'Saint Helena, Ascension and Tristan da Cunha': 'SH',
-                'Saint Helena, Ascension, and Tristan da Cunha': 'SH',
-                'Saint Kitts and Nevis': 'KN',
-                'Saint Lucia': 'LC',
-                'Saint Martin': 'RN',
-                'Saint Pierre and Miquelon': 'PM',
-                'Saint Vincent & the Grenadines': 'VC',
-                'Saint Vincent and the Grenadines': 'VC',
-                'Samoa': 'WS',
-                'San Marino': 'SM',
-                'Sao Tome and Principe': 'ST',
-                'Saudi Arabia': 'SA',
-                'Senegal': 'SN',
-                'Serbia': 'RS',
-                'Seychelles': 'SC',
-                'Sierra Leone': 'SL',
-                'Singapore': 'SG',
-                'Sint Maarten': 'NN',
-                'Slovakia': 'SK',
-                'Slovenia': 'SI',
-                'Solomon Islands': 'SB',
-                'Somalia': 'SO',
-                'South Africa': 'ZA',
-                'South Georgia and the South Sandwich Islands': 'GS',
-                'South Georgia and South Sandwich Islands': 'SX',
-                'South Korea': 'KR',
-                'South Sudan': 'SS',
-                'Spain': 'ES',
-                'Spratly Islands': 'PG',
-                'Sri Lanka': 'LK',
-                'St. Vincent and the Grenadines': 'VC',
-                'Sudan': 'SD',
-                'Suriname': 'SR',
-                'Svalbard': 'SV',
-                'Svalbard and Jan Mayen': 'SJ',
-                'Eswatini': 'SZ',
-                'Sweden': 'SE',
-                'Switzerland': 'CH',
-                'Syria': 'SY',
-                'Taiwan': 'TW',
-                'Taiwan, Province of China': 'TW',
-                'Tajikistan': 'TJ',
-                'Tanzania': 'TZ',
-                'Thailand': 'TH',
-                'Timor-Leste': 'TL',
-                'Togo': 'TG',
-                'Tokelau': 'TK',
-                'Tonga': 'TO',
-                'Trinidad and Tobago': 'TT',
-                'Tunisia': 'TN',
-                'Turkey': 'TR',
-                'Turkmenistan': 'TM',
-                'Turks and Caicos Islands': 'TC',
-                'Tuvalu': 'TV',
-                'Uganda': 'UG',
-                'Ukraine': 'UA',
-                'United Arab Emirates': 'AE',
-                'United Kingdom': 'GB',
-                'United States': 'US',
-                'United States Minor Outlying Islands': 'UM',
-                'Uruguay': 'UY',
-                'Uzbekistan': 'UZ',
-                'Vanuatu': 'VU',
-                'Venezuela': 'VE',
-                'Venezuela, Bolivarian Republic of': 'VE',
-                'Viet Nam': 'VN',
-                'Vietnam': 'VN',
-                'Virgin Islands': 'VQ',
-                'British Virgin Islands': 'VG',
-                'Virgin Islands, U.S.': 'VI',
-                'Wake Island': 'WQ',
-                'Wallis and Futuna': 'WF',
-                'West Bank': 'WE',
-                'Western Sahara': 'EH',
-                'Yemen': 'YE',
-                'Zambia': 'ZM',
-                'Zimbabwe': 'ZW'}
+# Skip these pages because they dont' have many rows.
+SKIP_LIST = ['factbook-2020/fields/205.html',
+             'factbook-2020/fields/304.html',
+             ]
+dog = 0
 
 
 def get_all_pages_from_index(index_page: str) -> List[Tuple[str, str]]:
@@ -330,39 +52,72 @@ def scrape_page(name: str, link: str) -> Dict[str, Dict[str, Union[str, float]]]
         name: the name of the category.
         link: the relative link to the category's html file.
     """
-    if txt_file := get_txt_version(link):
-        return txt_parser(name, txt_file)
-    else:
-        return html_parser(name, link)
+    # TODO: Add unique parser
+    if name in ['sanitation, etc']:
+        return subgroup_parser(name, link)
+    return html_parser(name, link)
 
 
-def get_txt_version(file: str) -> Optional[str]:
-    """Returns file path if there exists a txt version of the file in the
-     directory, otherwise it returns None."""
-    *directory, file_name = file.split('/')
-    txt_file = 'rawdata_' + file_name.replace('html', 'txt')
-    if txt_file in list(os.listdir(os.path.join(*directory))):
-        return os.path.join(*directory, txt_file)
+def subgroup_parser(name: str, link: str) -> Dict[str, Dict[str, float]]:
+    """Scrape a category's page which involves subgroups and return its data.
+
+    Args:
+        name: the name of the category.
+        link: the relative link to the category's html file.
+    """
+    with open(Path(link), encoding='utf8') as f:
+        page = BeautifulSoup(f, 'html.parser')
+
+    dataset = defaultdict(dict)
+    for tag in page.findAll('tr'):
+        if row_id := tag.get('id'):
+            group, subgroup = None, None
+            for span in tag.select('span'):
+                if 'subfield-group' in span.get('class'):
+                    group = span.text.replace(':', '')
+                    continue
+                if 'subfield-name' in span.get('class'):
+                    subgroup = span.text.replace(':', '')
+                    continue
+                elif 'subfield-number' in span.get('class'):
+                    dataset[f'{name} {group} ({subgroup})'][row_id] = \
+                        round(float(span.text[:span.text.find('%')]) / 100, 6)
+    return dataset
 
 
-def txt_parser(name: str, file: str) -> Dict[str, Dict[str, Union[str, float]]]:
-    """Parse a txt file and return the data."""
-    with open(file, encoding='utf8') as f:
-        # Skip Headers
-        next(f)
-        txt_contents = f.read()
-        print(txt_contents)
-        # Replace consecutive spaces with tabs.
-        txt_contents = txt_contents.replace('\n', '|')
-        txt_contents = re.sub(r'\s{2,}', '\t', txt_contents)
-        print( txt_contents)
-        data = [column.split('\t')[1:3]
-                for column in txt_contents.split('|') if column]
-        # Replace country names with country codes.
-        for i in range(len(data)):
-            data[i][0] = COUNTRY_DICT[data[i][0]]
-    return {name: {country_name: country_data for country_name, country_data in data}}
-    print('Data: ', name, data)
+def currency_page_parser(link: str):
+    with open(link, encoding='utf8') as f:
+        page = BeautifulSoup(f, 'html.parser')
+
+    data = defaultdict(dict)
+    for tag in page.findAll('tr'):
+        if row_id := tag.get('id'):
+            currency = tag.div.div.text.strip().replace('note: ', '')
+            if 'per US dollar' in currency:
+                currency = currency[:currency.find('per US dollar')]
+            elif 'uses the euro' in currency:
+                currency = 'euros (EUR)'
+            data['Currency'][row_id] = currency.strip()
+
+            try:
+                exchange_rate = tag.select('span')[0].text.replace(',', '')
+            except IndexError:
+                if 'US dollar' in d['Currency'][row_id]:
+                    exchange_rate = 1.0
+                elif 'euros' in d['Currency'][row_id]:
+                    exchange_rate = 0.82771
+                else:
+                    exchange_rate = float('nan')
+            data['Exchange rate'][row_id] = float(exchange_rate)
+    data['Currency']['US'] = 'the US dollar is used'
+    data['Exchange rate']['US'] = 1.0
+    data['Currency']['EC'] = 'the US dollar is used'
+    data['Exchange rate']['EC'] = 1.0
+    data['Currency']['TB'] = 'euros (EUR)'
+    data['Exchange rate']['TB'] = 0.82771
+    data['Currency']['GZ'] = 'new Israeli shekels (ILS)'
+    data['Exchange rate']['GZ'] = 3.606
+    return data
 
 
 def html_parser(name: str, link: str) -> Dict[str, Dict[str, Union[str, float]]]:
@@ -377,7 +132,6 @@ def html_parser(name: str, link: str) -> Dict[str, Dict[str, Union[str, float]]]
 
     if not subfields:
         raise ValueError('Subfields is empty')
-    # TODO: Specific type.
     # Parse the page for the given subfields and return a
     return get_subfields_data(page, subfields)
 
@@ -417,11 +171,12 @@ def discover_all_subfields(page_name: str, page: Page, threshold: int = 50) -> D
         for field in row.select('div'):
             discover_numeric_subfields(field, numeric_field_names)
             discover_text_subfields(field, text_field_names)
-
+    print(numeric_field_names)
+    print(text_field_names)
     # If it contains both types of fields, raise an exception because
     # handling this is not yet implemented.
-    if numeric_field_names and text_field_names:
-        raise ValueError(f"Numeric and text fields included in {page_name}.")
+    # if numeric_field_names and text_field_names:
+    #     raise ValueError(f"Numeric and text fields included in {page_name}.")
 
     numeric_subfield_dict: Dict[str, str] = create_subfield_dict(page_name,
                                                                  numeric_field_names,
@@ -432,18 +187,13 @@ def discover_all_subfields(page_name: str, page: Page, threshold: int = 50) -> D
                                                               text_field_names,
                                                               'text',
                                                               threshold)
-
     # If there is only one field, just use the page's category name as the
     # subfield name.
-    if len(numeric_subfield_dict) == 1:
+    if len(numeric_subfield_dict) == 1 and not text_subfield_dict:
         return {page_name: 'numeric'}
-    elif len(text_subfield_dict) == 1:
+    elif len(text_subfield_dict) == 1 and not numeric_subfield_dict:
         return {page_name: 'text'}
-
-    if numeric_subfield_dict:
-        return numeric_subfield_dict
-    else:
-        return text_subfield_dict
+    return numeric_subfield_dict | text_subfield_dict
 
 
 def discover_numeric_subfields(field: Tag, numeric_field_names: Dict[str, int]):
@@ -456,13 +206,18 @@ def discover_numeric_subfields(field: Tag, numeric_field_names: Dict[str, int]):
         numeric_field_names: Dictionary containing the current count of values
             for each numeric subfield name.
     """
-    for numeric_field in field.select('div.numeric'):
+    for numeric_field in field.select('div.numeric') or field.select('span.subfield-number'):
         field_name = numeric_field.find('span', {'class': 'subfield-name'})
         if field_name is None:
             numeric_field_names['NO NAME'] = numeric_field_names.get('NO NAME', 0) + 1
             continue
         name = field_name.text
+        if '(' in name:
+            name = name[:name.find('(') + 1].strip()
         numeric_field_names[name] = numeric_field_names.get(name, 0) + 1
+
+    if len(numeric_field_names) > 1 and numeric_field_names.get('NO NAME'):
+        del numeric_field_names['NO NAME']
 
 
 def discover_text_subfields(field: Tag, text_field_names: Dict[str, int]):
@@ -481,7 +236,12 @@ def discover_text_subfields(field: Tag, text_field_names: Dict[str, int]):
             text_field_names['NO NAME'] = text_field_names.get('NO NAME', 0) + 1
             continue
         name = field_name.text
+        if '(' in name:
+            name = name[:name.find('(') + 1].strip()
         text_field_names[name] = text_field_names.get(name, 0) + 1
+
+    if len(text_field_names) > 1 and text_field_names.get('NO NAME'):
+        del text_field_names['NO NAME']
 
 
 def create_subfield_dict(page_name: str, field_names_dict: Dict[str, int],
@@ -521,19 +281,25 @@ def get_subfields_data(page: Page, subfields: Dict[str, str]
         Dictionary containing the data on the page in the form:
         {'Subfield Name': {'Country Name': 'Subfield Value'}}
     """
-    subfield_type: str = list(subfields.values())[0]
     all_rows = page.findAll('tr')
     dataset = defaultdict(dict)
+
     for row in all_rows:
         if not (row_id := row.get('id')):
             continue
         for subfield in row.select('div.subfield'):
             if len(subfields) > 1:
-                for subfield_name in subfields:
-                    if clean_name(subfield.find(class_='subfield-name').text) in subfield_name:
-                        dataset[subfield_name][row_id] = parse_subfield(subfield, subfield_type)
+                for subfield_name, subfield_type in subfields.items():
+                    try:
+                        if clean_name(subfield.find(class_='subfield-name').text) in subfield_name:
+                            dataset[subfield_name][row_id] = parse_subfield(subfield, subfield_type)
+                    except AttributeError:
+                        print(f'No text found in {subfield}')
+                        break
             else:
+                subfield_type = list(subfields.values())[0]
                 dataset[list(subfields)[0]][row_id] = parse_subfield(subfield, subfield_type)
+                break
     return dataset
 
 
@@ -557,7 +323,8 @@ def parse_text_subfield(subfield: Tag) -> str:
         text = ''.join(subfield.findAll(text=True))
     # Remove any excess whitespace
     if not (output := re.sub(r'\s+', ' ', text).strip()):
-        raise ValueError(f'Could not find any text in {subfield}')
+        print(f'Could not find any text in {subfield}, returning "NA".')
+        output = 'NA'
     return output
 
 
@@ -583,7 +350,15 @@ def str_to_float(text: str) -> float:
     
     If % is included, divide value by 100.
     """
-    text = text.replace(' ', '').replace(',', '')
+    text = (text.replace(' ', '')
+            .replace(',', '')
+            .replace('$', '')
+            .replace('approximately', '')
+            .strip())
+    multiplier = (1E12 if 'trillion' in text else
+                  1E9 if 'billion' in text else
+                  1E6 if 'million' in text else
+                  1)
     new_text = ''
     for char in text:
         if not (char.isdigit() or char in ['.', '-', '<', '>']):
@@ -600,25 +375,26 @@ def str_to_float(text: str) -> float:
         elif 'note' in text.lower():
             value = np.nan
         else:
-            value = 0
+            value = np.nan
         print(f'**Could not convert {text} to float. Returning {value}')
         return value
     if '%' in text:
         number = round(number / 100, 6)
 
-    return number
+    return number * multiplier
 
 
 def clean_name(string_: str) -> str:
-    """"Returns string without extra white space and ':'."""
-    return string_.strip().replace(':', '')
+    """"Returns string without extra white space, ':' and removes parentheses."""
+    string_ = string_[:string_.find('(')]
+    return string_.replace(':', '').strip()
 
 
 # endregion
 
 if __name__ == "__main__":
     all_pages = get_all_pages_from_index('factbook-2020\\docs\\notesanddefs.html')
-    for i in [6]:
+    for i in [158]:
         target = all_pages[i]
         print(f'From {target} ({i})')
         cat = scrape_page(*target)
@@ -637,27 +413,32 @@ if __name__ == "__main__":
 # TODO LIST
 """
 Problems to fix:
+    CURRENTLY: 41, 59, 158
+
+
     SKIP:
         21, 37, 74, 111, 113, 139, 170
+    
+    -----------------------------------
         
-    Multiple year values given:
+    (FIXED: Only using most recent data) Multiple year values given:
         30, 33, 59, 61, 67, 70, 71, 76, 84, 91, 122, 148, 156, 171
         
     Formatting Complications:
         41, sub-sub categories
-        42, inconsistent subfields (afghanistan and akotiri)
-        60, inconsistent
+        (FIXED) 42, inconsistent subfields (afghanistan and akotiri)
+        59, exchange has a string and numeric uncategorized field
         158, sub-subfield
-        169, text outside of span
+        (FIXED)169, text outside of span
         
-    Mix of number and string descriptions:
-        55 (mean is always number), 100 (total is always number), 106 (definition is a string),
-         112, 116, 174
+    (FIXED) Mix of number and string descriptions:
+        55 (3 nubmber subfields, but two are called text), 59, 100 (total is always number), X106 (definition is a string),
+         X112, X116, X174
         
     One-off:
-        143, Dhekelia population is a long description rather than number
+        (FIXED)143, Dhekelia population is a long description rather than number
         
-    Billion/million fix:
+    (FIXED) Billion/million fix:
         29, 66
         
   
