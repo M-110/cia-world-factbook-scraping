@@ -2,7 +2,7 @@
 
 from bs4 import BeautifulSoup
 
-with open('factbook-2020/fields/398.html') as f:
+with open('../factbook-2020/fields/398.html') as f:
     page = BeautifulSoup(f, 'html.parser')
 
 d = defaultdict(dict)
@@ -20,7 +20,7 @@ for tag in page.findAll('tr'):
                 d[f'Sanitation Facility Access {group} ({subgroup})'][row_id] = \
                     round(float(span.text[:span.text.find('%')]) / 100, 6)
 
-with open('factbook-2020/fields/249.html') as f:
+with open('../factbook-2020/fields/249.html') as f:
     page = BeautifulSoup(f, 'html.parser')
 
 d = defaultdict(dict)
@@ -41,7 +41,7 @@ for tag in page.findAll('tr'):
                 except ValueError:
                     d[f'Sanitation Facility Access {group} ({subgroup})'][row_id] = span.text
 
-with open('factbook-2020/fields/249.html') as f:
+with open('../factbook-2020/fields/284.html') as f:
     page = BeautifulSoup(f, 'html.parser')
 
 d = defaultdict(dict)

@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup
 from typing import Optional, Tuple
 page = None
-with open('factbook-2020\\fields\\341.html') as page:
+with open('../factbook-2020/fields/341.html') as page:
     page = BeautifulSoup(page, 'html.parser')
     
 #cols = page.findAll('div', {'class': 'appendix-entry-name'})
